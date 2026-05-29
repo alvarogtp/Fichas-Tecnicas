@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generador de Fichas Técnicas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+
+    /* =====================================================
+       VARIABLES DE DISEÑO
+       ===================================================== */
+    :root {
+      --gold:            #F0A830;
+      --gold-dim:        rgba(240,168,48,0.72);
+      --gold-faint:      rgba(240,168,48,0.10);
+      --bg-negro:        #000000;
+      --bg-oscuro:       #0F0F16;
+      --bg-card:         #161622;
+      --borde-card:      #21212E;
+      --texto-claro:     #E5E7EB;
+      --texto-medio:     #9CA3AF;
+      --fuente:          'Montserrat', 'Gotham', -apple-system, sans-serif;
+      --logo-ancho:      180px;
+      --logo-alto:       66px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+
+    body {
+      font-family: var(--fuente);
+      background: var(--bg-oscuro);
+      color: var(--texto-claro);
+      min-height: 100vh;
+    }
+
+    /* =====================================================
+       NOTIFICACIÓN TOAST
+       ===================================================== */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1a1a2e;
+      border: 1px solid var(--borde-card);
+      border-radius: 10px;
+      padding: 13px 22px;
+      font-size: 0.83rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 999;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.exito  { border-color: rgba(16,185,129,0.4); color: #34d399; }
+    .toast.error  { border-color: rgba(239,68,68,0.4);  color: #ef4444; }
+    .toast.info   { border-color: rgba(193,128,39,0.4); color: var(--gold); }
+
+    /* =====================================================
+       FORMULARIO
+       ===================================================== */
+    #vista-formulario {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 20px 72px;
+      min-height: 100vh;
+    }
+
+    .form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--borde-card);
+      border-radius: 16px;
+      padding: 44px 52px;
+      width: 100%;
+      max-width: 720px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.45);
+    }
+
+    .form-header {
+      text-align: center;
+      margin-bottom: 36px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--borde-card);
+    }
+
+    .form-header-logo {
+      height: 46px;
+      margin: 0 auto 16px;
+      display: block;
+    }
+
+    .form-header h1 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .form-header p {
+      font-size: 0.8rem;
+      color: var(--texto-medio);
+    }
+
+    /* ---- Secciones ---- */
+    .form-section { margin-bottom: 26px; }
+
+    .form-section-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--gold);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .form-section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--borde-card);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 13px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-group label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--texto-medio);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .form-group input[type="text"] {
+      background: #0F0F16;
+      border: 1px solid var(--borde-card);
+      border-radius: 8px;
+      padding: 10px 13px;
+      font-family: var(--fuente);
+      font-size: 0.88rem;
+      color: var(--texto-claro);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-group input[type="text"]::placeholder { color: #444458; }
+    .form-group input[type="text"]:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(193,128,39,0.15);
+    }
+
+    /* ---- Upload box ---- */
+    .upload-box {
+      position: relative;
+      background: #0F0F16;
+      border: 1.5px dashed var(--borde-card);
+      border-radius: 8px;
+      min-height: 96px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 14px;
+      text-align: center;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .upload-box:hover { border-color: var(--gold); background: var(--gold-faint); }
+    .upload-box input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .upload-icon { font-size: 1.3rem; color: var(--gold); pointer-events: none; }
+    .upload-text {
+      font-size: 0.76rem;
+      color: var(--texto-medio);
+      pointer-events: none;
+      line-height: 1.4;
+    }
+    .upload-text strong { color: var(--gold); }
+    .upload-preview {
+      max-width: 100%;
+      max-height: 72px;
+      object-fit: contain;
+      border-radius: 4px;
+      display: none;
+    }
+    .upload-filename {
+      font-size: 0.7rem;
+      color: var(--gold);
+      font-weight: 600;
+      display: none;
+      word-break: break-all;
+    }
+
+    /* ---- Botón generar ---- */
+    .btn-generar {
+      display: block;
+      width: 100%;
+      margin-top: 30px;
+      padding: 15px 24px;
+      background: transparent;
+      border: 1.5px solid var(--gold);
+      border-radius: 10px;
+      font-family: var(--fuente);
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+    }
+    .btn-generar:hover {
+      background: var(--gold);
+      color: #000;
+      box-shadow: 0 4px 20px rgba(193,128,39,0.28);
+    }
+    .btn-generar:active { transform: scale(0.99); }
+
+    /* =====================================================
+       FICHA TÉCNICA — PANTALLA
+       ===================================================== */
+    #vista-ficha {
+      display: none;
+      background: #0a0a0a;
+      min-height: 100vh;
+      padding: 60px 20px 40px;
+    }
+
+    .btns-pantalla {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 200;
+    }
+
+    .btn-accion {
+      background: #1a1a26;
+      border: 1px solid var(--borde-card);
+      border-radius: 8px;
+      padding: 9px 20px;
+      font-family: var(--fuente);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--texto-claro);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .btn-accion:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-accion.primary {
+      background: rgba(193,128,39,0.14);
+      border-color: rgba(193,128,39,0.38);
+      color: var(--gold);
+    }
+    .btn-accion.primary:hover { background: var(--gold); color: #000; }
+
+    /* =====================================================
+       HOJA A4
+       ===================================================== */
+    .hoja {
+      width: 210mm;
+      height: 297mm;          /* altura fija A4 — necesaria para que flex:1 funcione */
+      background: var(--bg-negro);
+      margin: 0 auto;
+      padding: 13mm 15mm 11mm;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 60px rgba(193,128,39,0.07), 0 0 0 1px rgba(193,128,39,0.10);
+      overflow: hidden;
+    }
+
+    /* ---- ENCABEZADO: logo centrado + título centrado ---- */
+    .ficha-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding-bottom: 10px;
+      border-bottom: 1.5px solid var(--gold);
+      margin-bottom: 20px;
+      gap: 5px;
+    }
+
+    .ficha-header-logo {
+      max-width: var(--logo-ancho);
+      max-height: var(--logo-alto);
+      object-fit: contain;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .ficha-doc-label {
+      font-size: 0.56rem;
+      font-weight: 600;
+      letter-spacing: 0.20em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+    }
+
+    .ficha-titulo {
+      font-family: var(--fuente);
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
+    /* ---- Filas de datos ---- */
+    .ficha-datos {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 16px;
+    }
+
+    .ficha-fila {
+      display: flex;
+      align-items: stretch;
+      border-bottom: 1px solid rgba(193,128,39,0.15);
+    }
+
+    .ficha-fila-acento {
+      flex-shrink: 0;
+      width: 5px;
+      background: var(--gold);
+      clip-path: polygon(0 0, 60% 0, 100% 100%, 40% 100%);
+      margin-right: 14px;
+      align-self: stretch;
+      min-height: 34px;
+    }
+
+    .ficha-fila-label {
+      flex: 0 0 195px;
+      font-size: 0.70rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      color: var(--gold-dim);
+      padding: 9px 12px 9px 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .ficha-fila-valor {
+      flex: 1;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.02em;
+      padding: 9px 0;
+      display: flex;
+      align-items: center;
+    }
+
+    /* ---- Sección inferior: foto a ancho completo ---- */
+    .ficha-inferior {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .ficha-foto-bloque {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      min-height: 0;
+    }
+
+    .ficha-foto-titulo {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      background: var(--gold-faint);
+      border: 1px solid var(--gold-dim);
+      border-bottom: none;
+      flex-shrink: 0;
+    }
+
+    .ficha-foto-titulo-acento {
+      width: 4px;
+      height: 13px;
+      background: var(--gold);
+      clip-path: polygon(0 0, 55% 0, 100% 100%, 45% 100%);
+      flex-shrink: 0;
+    }
+
+    .ficha-foto-titulo span {
+      font-size: 0.63rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+    }
+
+    .ficha-foto-contenedor {
+      flex: 1;
+      width: 100%;
+      border: 1px solid var(--gold-dim);
+      background: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .ficha-foto-contenedor img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .ficha-img-vacia {
+      font-size: 0.70rem;
+      color: var(--gold-dim);
+      letter-spacing: 0.06em;
+      font-weight: 500;
+    }
+
+    /* ---- Footer ---- */
+    .ficha-footer {
+      padding-top: 9px;
+      border-top: 1px solid rgba(193,128,39,0.22);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.60rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--gold-dim);
+    }
+
+    /* =====================================================
+       MEDIA PRINT
+       ===================================================== */
+    @media print {
+      @page { size: A4; margin: 0; }
+
+      html, body {
+        background: #000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      #vista-formulario,
+      .btns-pantalla,
+      .toast { display: none !important; }
+
+      #vista-ficha {
+        display: block !important;
+        background: transparent !important;
+        padding: 0 !important;
+        min-height: unset !important;
+      }
+
+      .hoja {
+        width: 210mm !important;
+        height: 297mm !important;
+        margin: 0 !important;
+        padding: 13mm 15mm 11mm !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        page-break-after: always;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- =====================================================
+     TOAST
+     ===================================================== -->
+<div class="toast" id="toast"></div>
+
+
+<!-- =====================================================
+     VISTA 1 — FORMULARIO
+     ===================================================== -->
+<div id="vista-formulario">
+  <div class="form-card">
+
+    <div class="form-header">
+      <img class="form-header-logo" src="url logo.svg" alt="Logo"
+           onerror="this.style.display='none'" />
+      <h1>Ficha de Producto</h1>
+      <p>Completa los datos y genera la ficha lista para guardar como PDF.</p>
+    </div>
+
+    <!-- Datos del producto -->
+    <div class="form-section">
+      <div class="form-section-label">Datos del Producto</div>
+      <div class="form-grid">
+
+        <div class="form-group full">
+          <label for="inp-nombre">Nombre del Producto *</label>
+          <input type="text" id="inp-nombre" placeholder="Ej: Filete con Cordón" />
+        </div>
+
+        <div class="form-group">
+          <label for="inp-marca">Marca</label>
+          <input type="text" id="inp-marca" placeholder="Ej: Frigochaco" />
+        </div>
+
+        <div class="form-group">
+          <label for="inp-procedencia">Procedencia</label>
+          <input type="text" id="inp-procedencia" placeholder="Ej: Paraguay" />
+        </div>
+
+        <div class="form-group">
+          <label for="inp-categoria">Categoría</label>
+          <input type="text" id="inp-categoria" placeholder="Ej: Vacuno" />
+        </div>
+
+        <div class="form-group">
+          <label for="inp-almacenamiento">Almacenamiento</label>
+          <input type="text" id="inp-almacenamiento" placeholder="Ej: Refrigerado 0°C a 4°C" />
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Pesos -->
+    <div class="form-section">
+      <div class="form-section-label">Pesos</div>
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="inp-peso-unitario">Peso Unitario Aprox.</label>
+          <input type="text" id="inp-peso-unitario" placeholder="Ej: 1,8 KGS." />
+        </div>
+
+        <div class="form-group">
+          <label for="inp-peso-caja">Peso por Caja Aprox.</label>
+          <input type="text" id="inp-peso-caja" placeholder="Ej: 20 KGS." />
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Foto del producto (para la ficha) -->
+    <div class="form-section">
+      <div class="form-section-label">Foto del Producto</div>
+      <div class="upload-box" id="box-producto">
+        <input type="file" id="inp-foto-producto" accept="image/png,image/jpeg,image/webp"
+               onchange="previsualizarImagen(this,'preview-producto','filename-producto','upload-icon-producto','upload-text-producto')" />
+        <span class="upload-icon" id="upload-icon-producto">&#128247;</span>
+        <span class="upload-text" id="upload-text-producto">
+          <strong>Seleccionar imagen del producto</strong><br>JPG o PNG — aparecerá en la ficha
+        </span>
+        <img class="upload-preview" id="preview-producto" alt="" />
+        <span class="upload-filename" id="filename-producto"></span>
+      </div>
+    </div>
+
+    <button class="btn-generar" onclick="generarFicha()">
+      Generar Ficha Técnica &rarr;
+    </button>
+
+  </div>
+</div>
+
+
+<!-- =====================================================
+     VISTA 2 — FICHA TÉCNICA
+     ===================================================== -->
+<div id="vista-ficha">
+
+  <div class="btns-pantalla">
+    <button class="btn-accion" onclick="volverFormulario()">&#8592; Volver</button>
+    <button class="btn-accion primary" onclick="window.print()">&#x2193; Guardar como PDF</button>
+  </div>
+
+  <div class="hoja">
+
+    <!-- ENCABEZADO: logo arriba centrado + título centrado -->
+    <div class="ficha-header">
+      <img class="ficha-header-logo" id="ficha-logo-img"
+           src="url logo.svg" alt="Logo"
+           onerror="this.style.display='none'" />
+      <div class="ficha-doc-label">Documento Técnico Interno</div>
+      <div class="ficha-titulo">Ficha de Producto</div>
+    </div>
+
+    <!-- DATOS TÉCNICOS -->
+    <div class="ficha-datos">
+
+      <div class="ficha-fila">
+        <div class="ficha-fila-acento"></div>
+        <div class="ficha-fila-label">Producto</div>
+        <div class="ficha-fila-valor" id="td-nombre">—</div>
+      </div>
+
+      <div class="ficha-fila">
+        <div class="ficha-fila-acento"></div>
+        <div class="ficha-fila-label">Marca</div>
+        <div class="ficha-fila-valor" id="td-marca">—</div>
+      </div>
+
+      <div class="ficha-fila">
+        <div class="ficha-fila-acento"></div>
+        <div class="ficha-fila-label">Procedencia</div>
+        <div class="ficha-fila-valor" id="td-procedencia">—</div>
+      </div>
+
+      <div class="ficha-fila">
+        <div class="ficha-fila-acento"></div>
+        <div class="ficha-fila-label">Categoría</div>
+        <div class="ficha-fila-valor" id="td-categoria">—</div>
+      </div>
+
+      <div class="ficha-fila">
+        <div class="ficha-fila-acento"></div>
+        <div class="ficha-fila-label">Almacenamiento</div>
+        <div class="ficha-fila-valor" id="td-almacenamiento">—</div>
+      </div>
+
+      <div class="ficha-fila">
+        <div class="ficha-fila-acento"></div>
+        <div class="ficha-fila-label">Peso Unitario Aprox.</div>
+        <div class="ficha-fila-valor" id="td-peso-unitario">—</div>
+      </div>
+
+      <div class="ficha-fila">
+        <div class="ficha-fila-acento"></div>
+        <div class="ficha-fila-label">Peso por Caja Aprox.</div>
+        <div class="ficha-fila-valor" id="td-peso-caja">—</div>
+      </div>
+
+    </div>
+
+    <!-- SECCIÓN INFERIOR: foto centrada + pesos -->
+    <div class="ficha-inferior">
+
+      <div class="ficha-foto-bloque">
+        <div class="ficha-foto-titulo">
+          <div class="ficha-foto-titulo-acento"></div>
+          <span>Foto del Producto</span>
+        </div>
+        <div class="ficha-foto-contenedor" id="contenedor-img-producto">
+          <span class="ficha-img-vacia">Sin imagen</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="ficha-footer">
+      <span>www.gestapack.cl</span>
+      <span id="footer-fecha"></span>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- =====================================================
+     JAVASCRIPT
+     ===================================================== -->
+<script>
+
+  /* ---- Toast ---- */
+  let toastTimer;
+  function mostrarToast(msg, tipo = 'info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + tipo;
+    clearTimeout(toastTimer);
+    requestAnimationFrame(() => {
+      t.classList.add('visible');
+      toastTimer = setTimeout(() => t.classList.remove('visible'), 3500);
+    });
+  }
+
+  /* ---- Leer archivo como Data URL ---- */
+  function leerDataURL(input, cb) {
+    const file = input.files[0];
+    if (!file) { cb(null); return; }
+    const reader = new FileReader();
+    reader.onload = e => cb(e.target.result);
+    reader.readAsDataURL(file);
+  }
+
+  /* ---- Preview en formulario ---- */
+  function previsualizarImagen(input, idPreview, idFilename, idIcon, idText) {
+    leerDataURL(input, dataURL => {
+      if (!dataURL) return;
+      const prev = document.getElementById(idPreview);
+      const name = document.getElementById(idFilename);
+      const icon = document.getElementById(idIcon);
+      const text = document.getElementById(idText);
+      prev.src  = dataURL;
+      prev.style.display  = 'block';
+      name.textContent    = input.files[0].name;
+      name.style.display  = 'block';
+      icon.style.display  = 'none';
+      text.style.display  = 'none';
+    });
+  }
+
+  /* ---- Poner texto en la ficha ---- */
+  function setTexto(id, valor) {
+    document.getElementById(id).textContent = (valor || '').trim() || '—';
+  }
+
+  /* ---- Poner imagen en la ficha ---- */
+  function setImagen(idContenedor, dataURL) {
+    const c = document.getElementById(idContenedor);
+    if (dataURL) {
+      const img = document.createElement('img');
+      img.src = dataURL;
+      c.innerHTML = '';
+      c.appendChild(img);
+    } else {
+      c.innerHTML = '<span class="ficha-img-vacia">Sin imagen</span>';
+    }
+  }
+
+  /* ---- Fecha formateada ---- */
+  function fechaHoy() {
+    return new Date().toLocaleDateString('es-CL', {
+      day: '2-digit', month: 'long', year: 'numeric'
+    });
+  }
+
+  /* ---- GENERAR FICHA ---- */
+  function generarFicha() {
+    const nombre = document.getElementById('inp-nombre').value.trim();
+    if (!nombre) {
+      mostrarToast('El nombre del producto es obligatorio.', 'error');
+      document.getElementById('inp-nombre').focus();
+      return;
+    }
+
+    setTexto('td-nombre',         nombre);
+    setTexto('td-marca',          document.getElementById('inp-marca').value);
+    setTexto('td-procedencia',    document.getElementById('inp-procedencia').value);
+    setTexto('td-categoria',      document.getElementById('inp-categoria').value);
+    setTexto('td-almacenamiento', document.getElementById('inp-almacenamiento').value);
+    setTexto('td-peso-unitario',  document.getElementById('inp-peso-unitario').value);
+    setTexto('td-peso-caja',      document.getElementById('inp-peso-caja').value);
+
+    document.getElementById('footer-fecha').textContent =
+      'Fecha de emisión: ' + fechaHoy();
+
+    leerDataURL(document.getElementById('inp-foto-producto'), dataURL => {
+      setImagen('contenedor-img-producto', dataURL);
+      mostrarFicha();
+    });
+  }
+
+  function mostrarFicha() {
+    document.getElementById('vista-formulario').style.display = 'none';
+    document.getElementById('vista-ficha').style.display      = 'block';
+    window.scrollTo(0, 0);
+    setTimeout(() => window.print(), 450);
+  }
+
+  function volverFormulario() {
+    document.getElementById('vista-ficha').style.display      = 'none';
+    document.getElementById('vista-formulario').style.display = 'flex';
+    window.scrollTo(0, 0);
+  }
+
+</script>
+</body>
+</html>
