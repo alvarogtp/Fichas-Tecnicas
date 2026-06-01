@@ -297,16 +297,17 @@
       overflow: hidden;
     }
 
-    /* ---- ENCABEZADO: logo centrado + título centrado ---- */
+    /* ---- ENCABEZADO: logo izquierda + título derecha ---- */
     .ficha-header {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      text-align: center;
+      justify-content: space-between;
+      gap: 16px;
       padding-bottom: 10px;
       border-bottom: 1.5px solid var(--gold);
       margin-bottom: 20px;
-      gap: 5px;
+      flex-shrink: 0;
     }
 
     .ficha-header-logo {
@@ -314,7 +315,15 @@
       max-height: var(--logo-alto);
       object-fit: contain;
       display: block;
-      margin-bottom: 4px;
+      flex-shrink: 0;
+    }
+
+    .ficha-header-titulo-bloque {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      text-align: right;
+      gap: 2px;
     }
 
     .ficha-doc-label {
@@ -515,7 +524,7 @@
   <div class="form-card">
 
     <div class="form-header">
-      <img class="form-header-logo" src="url logo.svg" alt="Logo"
+      <img class="form-header-logo" src="logo.svg" alt="Logo"
            onerror="this.style.display='none'" />
       <h1>Ficha de Producto</h1>
       <p>Completa los datos y genera la ficha lista para guardar como PDF.</p>
@@ -607,13 +616,14 @@
 
   <div class="hoja">
 
-    <!-- ENCABEZADO: logo arriba centrado + título centrado -->
+    <!-- ENCABEZADO: logo izquierda + título derecha -->
     <div class="ficha-header">
-      <img class="ficha-header-logo" id="ficha-logo-img"
-           src="url logo.svg" alt="Logo"
+      <img class="ficha-header-logo" src="logo.svg" alt="Gestapack"
            onerror="this.style.display='none'" />
-      <div class="ficha-doc-label">Documento Técnico Interno</div>
-      <div class="ficha-titulo">Ficha de Producto</div>
+      <div class="ficha-header-titulo-bloque">
+        <div class="ficha-doc-label">Documento Técnico Interno</div>
+        <div class="ficha-titulo">Ficha de Producto</div>
+      </div>
     </div>
 
     <!-- DATOS TÉCNICOS -->
